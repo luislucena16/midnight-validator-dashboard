@@ -33,6 +33,7 @@ export function useNodeData() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [healthPeers, setHealthPeers] = useState<number | null>(null)
 
   const fetchNodeData = async () => {
     setIsLoading(true)
@@ -42,16 +43,17 @@ export function useNodeData() {
 
     try {
       const results = await Promise.allSettled([
-        call<string>("system_chain"), // 0
-        call<string>("system_version"), // 1
-        call<string>("system_localPeerId"), // 2  (puede fallar)
-        call<Peer[]>("system_peers"), // 3  (puede fallar)
-        call<BlockHeader>("chain_getHeader"), // 4
-        call<string>("chain_getFinalizedHead"), // 5
-        call<SyncState>("system_syncState"), // 6
-        call<ChainStatus>("sidechain_getStatus"), // 7
-        call<SidechainStatus>("sidechain_getStatus"), // 8
-        call<{ version: number; methods: string[] }>("rpc_methods"), // 9
+        call("system_chain"), // 0
+        call("system_version"), // 1
+        call("system_localPeerId"), // 2  (can fail)
+        call("system_peers"), // 3  (can fail)
+        call("chain_getHeader"), // 4
+        call("chain_getFinalizedHead"), // 5
+        call("system_syncState"), // 6
+        call("sidechain_getStatus"), // 7
+        call("sidechain_getStatus"), // 8
+        call("rpc_methods"), // 9
+        call("system_health"), // 10 <-- new
       ])
 
       const [
@@ -65,6 +67,7 @@ export function useNodeData() {
         chainStatus,
         sidechainStatus,
         methodsResp,
+        health,
       ] = results.map(pick)
 
       // Si el encabezado finalizado está disponible tratamos de traerlo;
@@ -72,7 +75,7 @@ export function useNodeData() {
       let finalizedHeader: BlockHeader | null = null
       if (finalizedHeadHash) {
         try {
-          finalizedHeader = await call<BlockHeader>("chain_getHeader", [finalizedHeadHash])
+          finalizedHeader = await call("chain_getHeader", [finalizedHeadHash])
         } catch (e) {
           console.warn("Unable to fetch finalized header:", e)
         }
@@ -101,6 +104,12 @@ export function useNodeData() {
         methods: methodsResp?.methods || [],
       })
 
+      if (health && typeof health.peers === "number") {
+        setHealthPeers(health.peers)
+      } else {
+        setHealthPeers(null)
+      }
+
       setLastUpdate(new Date())
     } catch (error) {
       console.error("Failed to fetch node data:", error)
@@ -118,5 +127,5 @@ export function useNodeData() {
     return () => clearInterval(interval)
   }, [])
 
-  return { ...data, isLoading, lastUpdate, refresh: fetchNodeData }
+  return { ...data, isLoading, lastUpdate, refresh: fetchNodeData, healthPeers }
 }
