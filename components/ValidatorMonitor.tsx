@@ -422,23 +422,6 @@ export function ValidatorMonitor() {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Current Public Key Display */}
-              <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-lg border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-indigo-500" />
-                  <span className="font-medium">Current Public Key</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs font-mono bg-white dark:bg-gray-800 p-2 rounded flex-1 break-all border">
-                    {publicKey}
-                  </code>
-                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(publicKey)} className="h-8 px-3">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">This key is used in the curl examples above</p>
-              </div>
             </div>
           </TabsContent>
         </Tabs>
