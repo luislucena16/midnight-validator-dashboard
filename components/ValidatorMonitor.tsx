@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,22 @@ export function ValidatorMonitor() {
     nodeKey: string | null
     sessionKeys: string[]
   } | null>(null)
+  const [connectedPeers, setConnectedPeers] = useState<number | null>(null)
+
+  useEffect(() => {
+    // Fetch connected peers from system_health
+    const fetchPeers = async () => {
+      try {
+        const health = await call("system_health")
+        setConnectedPeers(health?.peers ?? 0)
+      } catch (err) {
+        setConnectedPeers(0)
+      }
+    }
+    fetchPeers()
+    const interval = setInterval(fetchPeers, 30000)
+    return () => clearInterval(interval)
+  }, [call])
 
   const searchValidator = async () => {
     if (!publicKey.trim()) return
@@ -48,9 +64,9 @@ export function ValidatorMonitor() {
     try {
       // Try to get actual node information
       const [hasKey, nodeRoles, localPeerId] = await Promise.all([
-        call<boolean>("author_hasKey", [publicKey, "aura"]),
-        call<string[]>("system_nodeRoles"),
-        call<string>("system_localPeerId"),
+        call("author_hasKey", [publicKey, "aura"]),
+        call("system_nodeRoles"),
+        call("system_localPeerId"),
       ])
 
       const mockData = {
@@ -309,7 +325,7 @@ export function ValidatorMonitor() {
                     <div className="flex items-center justify-center mb-2">
                       <Users className="h-5 w-5 text-blue-500" />
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">24</div>
+                    <div className="text-2xl font-bold text-blue-600">{connectedPeers !== null ? connectedPeers : "-"}</div>
                     <div className="text-sm text-muted-foreground">Connected Peers</div>
                   </Card>
 
