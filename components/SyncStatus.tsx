@@ -12,9 +12,10 @@ interface SyncStatusProps {
   latestHeader: BlockHeader | null
   finalizedHeader: BlockHeader | null
   isLoading: boolean
+  healthPeers?: number | null
 }
 
-export function SyncStatus({ syncState, chainStatus, latestHeader, finalizedHeader, isLoading }: SyncStatusProps) {
+export function SyncStatus({ syncState, chainStatus, latestHeader, finalizedHeader, healthPeers }: SyncStatusProps) {
   const getSyncProgress = () => {
     if (!syncState) return 100
     const { startingBlock, currentBlock, highestBlock } = syncState
@@ -127,7 +128,7 @@ export function SyncStatus({ syncState, chainStatus, latestHeader, finalizedHead
               <div className="text-sm text-muted-foreground">Synchronization Complete</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-blue-600">{chainStatus?.peers || 0}</div>
+              <div className="text-xl font-bold text-blue-600">{healthPeers ?? 0}</div>
               <div className="text-sm text-muted-foreground">Connected Peers</div>
             </div>
           </div>
