@@ -26,11 +26,9 @@ import {
 } from "lucide-react"
 import { useRPC } from "@/hooks/useRPC"
 
-const DEFAULT_PUBLIC_KEY = "0x0c0d41d20c9c2a87764cee14190abb33cfc3ff95e958f63c6234dce32e464f1b"
-
 export function ValidatorMonitor() {
   const { call, isLoading } = useRPC()
-  const [publicKey, setPublicKey] = useState(DEFAULT_PUBLIC_KEY)
+  const [publicKey, setPublicKey] = useState("")
   const [validatorData, setValidatorData] = useState<{
     isRegistered: boolean
     uptime: number
@@ -77,7 +75,7 @@ export function ValidatorMonitor() {
         performance: 98.5,
         status: nodeRoles?.includes("Authority") ? "Authority" : "Full Node",
         nodeKey: localPeerId || publicKey,
-        sessionKeys: [publicKey, "0x1234...abcd", "0x5678...efgh"],
+        sessionKeys: [publicKey || "0x", "0x1234...abcd", "0x5678...efgh"],
       }
 
       setValidatorData(mockData)
@@ -91,8 +89,8 @@ export function ValidatorMonitor() {
         blocksProduced: 1247,
         performance: 98.5,
         status: "Active",
-        nodeKey: publicKey,
-        sessionKeys: [publicKey, "0x1234...abcd"],
+        nodeKey: publicKey || "0x",
+        sessionKeys: [publicKey || "0x", "0x1234...abcd"],
       })
     }
   }

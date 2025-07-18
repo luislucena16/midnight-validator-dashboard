@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Copy, Terminal, Key, Database, Users, Globe, Code, CheckCircle, AlertCircle } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
-const SAMPLE_PUBLIC_KEY = "0x0c0d41d20c9c2a87764cee14190abb33cfc3ff95e958f63c6234dce32e464f1b"
-
 interface CurlExample {
   title: string
   description: string
@@ -27,9 +25,9 @@ const curlExamples: CurlExample[] = [
     method: "author_hasKey",
     icon: Key,
     category: "author",
-    curl: `curl -X POST http://127.0.0.1:9944 \\
-  -H "Content-Type: application/json" \\
-  -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["${SAMPLE_PUBLIC_KEY}", "aura"],"id":1}' | jq .`,
+    curl: `curl -X POST http://127.0.0.1:9944 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["<YOUR_PUBLIC_KEY>", "aura"],"id":1}' | jq .`,
   },
   {
     title: "Pending Extrinsics",
@@ -280,20 +278,6 @@ export function LocalEndpointsSetup() {
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        {/* Sample Public Key Info */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 rounded-lg border">
-          <div className="flex items-center gap-2 mb-2">
-            <Key className="h-4 w-4 text-indigo-500" />
-            <span className="font-medium">Sample Public Key Used</span>
-          </div>
-          <code className="text-xs font-mono bg-white dark:bg-gray-800 p-2 rounded block border break-all">
-            {SAMPLE_PUBLIC_KEY}
-          </code>
-          <p className="text-xs text-muted-foreground mt-2">
-            Replace this with your actual validator public key when testing
-          </p>
         </div>
       </CardContent>
     </Card>
