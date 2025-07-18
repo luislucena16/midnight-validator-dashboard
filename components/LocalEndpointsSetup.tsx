@@ -45,7 +45,7 @@ const curlExamples: CurlExample[] = [
     method: "system_health",
     icon: Users,
     category: "system",
-    curl: `curl -X POST https://rpc.testnet-02.midnight.network/ \\
+    curl: `curl -X POST http://127.0.0.1:9944 \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' | jq .`,
   },
