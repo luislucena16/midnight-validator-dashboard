@@ -24,6 +24,7 @@ export default function MidnightDashboard() {
     isLoading,
     lastUpdate,
     refresh,
+    healthPeers,
   } = useNodeData()
 
   return (
@@ -86,6 +87,7 @@ export default function MidnightDashboard() {
             latestHeader={latestHeader}
             finalizedHeader={finalizedHeader}
             isLoading={isLoading}
+            healthPeers={healthPeers}
           />
         </div>
 
