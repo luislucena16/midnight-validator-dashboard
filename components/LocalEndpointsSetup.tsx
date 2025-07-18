@@ -44,12 +44,12 @@ const curlExamples: CurlExample[] = [
   {
     title: "Connected Peers",
     description: "Get all connected peers",
-    method: "system_peers",
+    method: "system_health",
     icon: Users,
     category: "system",
-    curl: `curl -X POST http://127.0.0.1:9944 \\
+    curl: `curl -X POST https://rpc.testnet-02.midnight.network/ \\
   -H "Content-Type: application/json" \\
-  -d '{"jsonrpc":"2.0","method":"system_peers","params":[],"id":1}' | jq .`,
+  -d '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' | jq .`,
   },
   {
     title: "Local Peer ID",
