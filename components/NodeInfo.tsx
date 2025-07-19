@@ -4,20 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Server, GitBranch, RefreshCw, Activity, Layers } from "lucide-react"
-import type { SystemInfo, SidechainStatus } from "@/types/rpc"
+import type { SystemInfo, SidechainAndMainchainStatus } from "@/types/rpc"
 
 interface NodeInfoProps {
   chainInfo: SystemInfo | null
   nodeVersion: string | null
-  sidechainStatus: SidechainStatus | null
+  sidechainAndMainchainStatus: SidechainAndMainchainStatus | null
   lastUpdate: Date | null
   onRefresh: () => void
   isLoading: boolean
 }
 
-export function NodeInfo({ chainInfo, nodeVersion, sidechainStatus, lastUpdate, onRefresh, isLoading }: NodeInfoProps) {
+export function NodeInfo({ chainInfo, nodeVersion, sidechainAndMainchainStatus, lastUpdate, onRefresh, isLoading }: NodeInfoProps) {
   const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
+    return new Date(timestamp).toUTCString()
   }
 
   return (
@@ -71,8 +71,8 @@ export function NodeInfo({ chainInfo, nodeVersion, sidechainStatus, lastUpdate, 
           </div>
         </div>
 
-        {/* Sidechain Status */}
-        {sidechainStatus && (
+        {/* Sidechain and Mainchain Status */}
+        {sidechainAndMainchainStatus && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-orange-500" />
@@ -86,16 +86,16 @@ export function NodeInfo({ chainInfo, nodeVersion, sidechainStatus, lastUpdate, 
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center space-y-1">
-                  <div className="text-2xl font-bold text-orange-600">{sidechainStatus.sidechain.epoch}</div>
+                  <div className="text-2xl font-bold text-orange-600">{sidechainAndMainchainStatus.sidechain.epoch}</div>
                   <div className="text-xs text-muted-foreground">Current Epoch</div>
                 </div>
                 <div className="text-center space-y-1">
-                  <div className="text-2xl font-bold text-blue-600">{sidechainStatus.sidechain.slot}</div>
+                  <div className="text-2xl font-bold text-blue-600">{sidechainAndMainchainStatus.sidechain.slot}</div>
                   <div className="text-xs text-muted-foreground">Current Slot</div>
                 </div>
                 <div className="text-center space-y-1">
                   <div className="text-sm font-mono text-green-600">
-                    {formatTimestamp(sidechainStatus.sidechain.nextEpochTimestamp)}
+                    {formatTimestamp(sidechainAndMainchainStatus.sidechain.nextEpochTimestamp)}
                   </div>
                   <div className="text-xs text-muted-foreground">Next Epoch</div>
                 </div>
@@ -109,16 +109,16 @@ export function NodeInfo({ chainInfo, nodeVersion, sidechainStatus, lastUpdate, 
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center space-y-1">
-                  <div className="text-2xl font-bold text-purple-600">{sidechainStatus.mainchain.epoch}</div>
+                  <div className="text-2xl font-bold text-purple-600">{sidechainAndMainchainStatus.mainchain.epoch}</div>
                   <div className="text-xs text-muted-foreground">Current Epoch</div>
                 </div>
                 <div className="text-center space-y-1">
-                  <div className="text-2xl font-bold text-indigo-600">{sidechainStatus.mainchain.slot}</div>
+                  <div className="text-2xl font-bold text-indigo-600">{sidechainAndMainchainStatus.mainchain.slot}</div>
                   <div className="text-xs text-muted-foreground">Current Slot</div>
                 </div>
                 <div className="text-center space-y-1">
                   <div className="text-sm font-mono text-green-600">
-                    {formatTimestamp(sidechainStatus.mainchain.nextEpochTimestamp)}
+                    {formatTimestamp(sidechainAndMainchainStatus.mainchain.nextEpochTimestamp)}
                   </div>
                   <div className="text-xs text-muted-foreground">Next Epoch</div>
                 </div>

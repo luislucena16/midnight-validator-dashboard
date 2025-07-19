@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRPC } from "./useRPC"
-import type { ChainStatus, BlockHeader, SystemInfo, Peer, SyncState, SidechainStatus } from "@/types/rpc"
+import type { ChainStatus, BlockHeader, SystemInfo, Peer, SyncState, SidechainAndMainchainStatus } from "@/types/rpc"
 
 export function useNodeData() {
   const { call } = useRPC()
@@ -25,8 +25,8 @@ export function useNodeData() {
     syncState: null as SyncState | null,
     chainStatus: null as ChainStatus | null,
 
-    // Sidechain
-    sidechainStatus: null as SidechainStatus | null,
+    // Sidechain and Mainchain
+    sidechainAndMainchainStatus: null as SidechainAndMainchainStatus | null,
 
     // Methods
     methods: [] as string[],
@@ -65,7 +65,7 @@ export function useNodeData() {
         finalizedHeadHash,
         syncState,
         chainStatus,
-        sidechainStatus,
+        sidechainAndMainchainStatus,
         methodsResp,
         health,
       ] = results.map(pick)
@@ -100,7 +100,7 @@ export function useNodeData() {
         finalizedHeader,
         syncState,
         chainStatus,
-        sidechainStatus,
+        sidechainAndMainchainStatus,
         methods: methodsResp?.methods || [],
       })
 

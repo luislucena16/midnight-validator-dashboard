@@ -73,7 +73,7 @@ export interface SyncState {
   highestBlock: number
 }
 
-export interface SidechainStatus {
+export interface SidechainAndMainchainStatus {
   sidechain: {
     epoch: number
     slot: number

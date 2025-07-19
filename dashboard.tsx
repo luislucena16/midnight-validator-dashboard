@@ -19,7 +19,7 @@ export default function MidnightDashboard() {
     finalizedHeader,
     syncState,
     chainStatus,
-    sidechainStatus,
+    sidechainAndMainchainStatus,
     methods,
     isLoading,
     lastUpdate,
@@ -66,7 +66,7 @@ export default function MidnightDashboard() {
         {/* Node Status Section */}
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Node Status</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Network Status</h2>
             <p className="text-sm text-muted-foreground">Real-time information about your Midnight node</p>
           </div>
 
@@ -74,7 +74,7 @@ export default function MidnightDashboard() {
           <NodeInfo
             chainInfo={chainInfo}
             nodeVersion={nodeVersion}
-            sidechainStatus={sidechainStatus}
+            sidechainAndMainchainStatus={sidechainAndMainchainStatus}
             lastUpdate={lastUpdate}
             onRefresh={refresh}
             isLoading={isLoading}
