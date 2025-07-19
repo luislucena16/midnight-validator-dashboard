@@ -78,7 +78,9 @@ export function SyncStatus({ syncState, chainStatus, latestHeader, finalizedHead
               <Database className="h-6 w-6 text-blue-500" />
             </div>
             <div className="space-y-2">
-              <div className="text-2xl font-bold text-blue-600">#{latestBlockNumber.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {latestHeader?.number ? parseInt(latestHeader.number, 16) : "N/A"}
+              </div>
               <div className="text-sm text-muted-foreground">Latest Block</div>
               {latestHeader?.parentHash && (
                 <code className="text-xs font-mono bg-white dark:bg-gray-800 p-2 rounded block border">
@@ -94,7 +96,9 @@ export function SyncStatus({ syncState, chainStatus, latestHeader, finalizedHead
               <CheckCircle className="h-6 w-6 text-green-500" />
             </div>
             <div className="space-y-2">
-              <div className="text-2xl font-bold text-green-600">#{finalizedBlockNumber.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {finalizedHeader?.number ? parseInt(finalizedHeader.number, 16) : "N/A"}
+              </div>
               <div className="text-sm text-muted-foreground">Finalized Block</div>
               {finalizedHeader?.parentHash && (
                 <code className="text-xs font-mono bg-white dark:bg-gray-800 p-2 rounded block border">

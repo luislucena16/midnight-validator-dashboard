@@ -96,7 +96,7 @@ export function HeaderCard({
               <span className="font-medium">Latest Block</span>
             </div>
             <div className="text-2xl font-bold">
-              #{latestHeader?.number ? Number.parseInt(latestHeader.number, 16) : "N/A"}
+              {latestHeader?.number ? parseInt(latestHeader.number, 16) : "N/A"}
             </div>
             <div className="text-xs text-muted-foreground font-mono">{latestHeader?.parentHash?.slice(0, 10)}...</div>
           </div>
@@ -110,7 +110,7 @@ export function HeaderCard({
               <span className="font-medium">Finalized</span>
             </div>
             <div className="text-2xl font-bold">
-              #{finalizedHead?.number ? Number.parseInt(finalizedHead.number, 16) : "N/A"}
+              {finalizedHead?.number ? parseInt(finalizedHead.number, 16) : "N/A"}
             </div>
             <div className="text-xs text-muted-foreground font-mono">{finalizedHead?.parentHash?.slice(0, 10)}...</div>
           </div>
