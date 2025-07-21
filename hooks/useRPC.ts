@@ -9,7 +9,7 @@ export function useRPC() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const call = useCallback(async (method: string, params: any[] = []): Promise<any | null> => {
+  const call = useCallback(async (method: string, params: any[] = [], rpcUrl?: string): Promise<any | null> => {
     setIsLoading(true)
     setError(null)
 
@@ -21,7 +21,7 @@ export function useRPC() {
     }
 
     try {
-      const response = await fetch(RPC_URL, {
+      const response = await fetch(rpcUrl || RPC_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
