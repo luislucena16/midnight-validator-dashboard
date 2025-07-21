@@ -26,6 +26,20 @@ import {
 } from "lucide-react"
 import { useRPC } from "@/hooks/useRPC"
 
+function useCopyToClipboard(timeout = 2000) {
+  const [copied, setCopied] = useState(false)
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), timeout)
+    } catch (err) {
+      console.error("Failed to copy text:", err)
+    }
+  }
+  return { copied, copy }
+}
+
 export function ValidatorMonitor() {
   const { call, isLoading } = useRPC()
   const [validatorData, setValidatorData] = useState<{
@@ -46,7 +60,7 @@ export function ValidatorMonitor() {
     connectedPeers: number | null
   } | null>(null)
   const [connectedPeers, setConnectedPeers] = useState<number | null>(null)
-  const [copiedNodeKey, setCopiedNodeKey] = useState(false)
+  const copyHookValidatorMonitor = useCopyToClipboard()
 
   useEffect(() => {
     // Fetch connected peers from system_health
@@ -130,17 +144,6 @@ export function ValidatorMonitor() {
     const days = Math.floor(hours / 24)
     const remainingHours = hours % 24
     return `${days}d ${remainingHours}h`
-  }
-
-  const handleCopyNodeKey = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedNodeKey(true)
-      setTimeout(() => setCopiedNodeKey(false), 1500)
-    } catch (err) {
-      setCopiedNodeKey(false)
-      alert("Error while copying Node Key")
-    }
   }
 
   const copyToClipboard = async (text: string) => {
@@ -457,12 +460,12 @@ export function ValidatorMonitor() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleCopyNodeKey(validatorData.nodeKey || "N/A")}
+                              onClick={() => copyHookValidatorMonitor.copy(validatorData.nodeKey || "N/A")}
                               className="h-8 w-8 p-0"
                             >
                               <Copy className="h-3 w-3" />
                             </Button>
-                            {copiedNodeKey && (
+                            {copyHookValidatorMonitor.copied && (
                               <span className="absolute top-full mt-1 text-xs text-green-600 bg-white px-2 py-1 rounded shadow z-10">
                                 Copied!
                               </span>

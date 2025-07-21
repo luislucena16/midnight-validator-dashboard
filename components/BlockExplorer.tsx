@@ -7,11 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Search, Hash, Database, Info, Users, UserCheck, Copy } from "lucide-react"
-import { useRPC } from "@/hooks/useRPC"
 import type { Block, AriadneParameters } from "@/types/rpc"
 
+function useCopyToClipboard(timeout = 2000) {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const copy = async (text: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedIndex(index)
+      setTimeout(() => setCopiedIndex(null), timeout)
+    } catch (err) {
+      console.error("Failed to copy text:", err)
+    }
+  }
+  return { copiedIndex, copy }
+}
+
 export function BlockExplorer() {
-  const { call, isLoading } = useRPC()
   const [blockNumber, setBlockNumber] = useState("")
   const [blockData, setBlockData] = useState<{
     hash: string | null
@@ -22,31 +34,43 @@ export function BlockExplorer() {
     block: null,
     parameters: null,
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const copyHookBlockExplorer = useCopyToClipboard()
 
   const exploreBlock = async () => {
     if (!blockNumber) return
-
+    setIsLoading(true)
+    setBlockData({ hash: null, block: null, parameters: null })
     try {
       const blockNum = Number.parseInt(blockNumber)
-
-      // Get block hash
-      const hash = await call<string>("chain_getBlockHash", [blockNum])
-
-      if (hash) {
-        // Get full block data
-        const [blockResp, parameters] = await Promise.all([
-          call<{ block: Block }>("chain_getBlock", [hash]),
-          call<AriadneParameters>("sidechain_getAriadneParameters", [blockNum]),
-        ])
-
-        setBlockData({
-          hash,
-          block: blockResp?.block ?? null,
-          parameters,
-        })
+      // 1. Obtener hash del bloque
+      const hashRes = await fetch(`/api/block-hash?number=${blockNum}`)
+      const hashJson = await hashRes.json()
+      console.log("[BlockExplorer] /api/block-hash response:", hashJson)
+      if (!hashRes.ok || !hashJson.hash) {
+        console.error("[BlockExplorer] Error obteniendo hash:", hashJson)
+        setIsLoading(false)
+        return
       }
+      const hash = hashJson.hash
+      // 2. Obtener datos del bloque y parámetros Ariadne en paralelo
+      const [blockResp, parametersResp] = await Promise.all([
+        fetch(`/api/block?hash=${hash}`),
+        fetch(`/api/ariadne-parameters?number=${blockNum}`),
+      ])
+      const blockJson = await blockResp.json()
+      const parametersJson = await parametersResp.json()
+      console.log("[BlockExplorer] /api/block response:", blockJson)
+      console.log("[BlockExplorer] /api/ariadne-parameters response:", parametersJson)
+      setBlockData({
+        hash,
+        block: blockJson.block ?? null,
+        parameters: parametersResp.ok ? parametersJson : null,
+      })
     } catch (error) {
-      console.error("Failed to explore block:", error)
+      console.error("[BlockExplorer] Error en exploreBlock:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -70,7 +94,7 @@ export function BlockExplorer() {
           />
           <Button onClick={exploreBlock} disabled={isLoading || !blockNumber} className="flex items-center gap-2">
             <Search className="h-4 w-4" />
-            Explore
+            {isLoading ? "Loading..." : "Explore"}
           </Button>
         </div>
 
@@ -196,14 +220,21 @@ export function BlockExplorer() {
                                     </code>
                                   </div>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => navigator.clipboard.writeText(candidate.sidechainPublicKey)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
+                                <div className="relative flex flex-col items-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyHookBlockExplorer.copy(candidate.sidechainPublicKey, index)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                  {copyHookBlockExplorer.copiedIndex === index && (
+                                    <span className="absolute top-full mt-1 text-xs text-green-600 bg-white px-2 py-1 rounded shadow z-10">
+                                      Copied!
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           {blockData.parameters.permissionedCandidates.length > 5 && (
@@ -220,90 +251,103 @@ export function BlockExplorer() {
 
                 {/* Candidate Registrations Section */}
                 {blockData.parameters.candidateRegistrations && (
-                  <Card className="border-l-4 border-l-emerald-500">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <UserCheck className="h-4 w-4 text-emerald-500" />
-                        Candidate Registrations
-                        <Badge variant="secondary">
-                          {Object.keys(blockData.parameters.candidateRegistrations).length}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {Object.entries(blockData.parameters.candidateRegistrations)
-                          .slice(0, 3)
-                          .map(([key, registration]: [string, any], index) => (
-                            <div key={index} className="border rounded-lg p-4 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <Badge variant="outline" className="font-mono text-xs">
-                                  Registration #{index + 1}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => navigator.clipboard.writeText(key)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div className="space-y-1">
-                                  <span className="font-medium text-muted-foreground">Registration Key</span>
-                                  <code className="block text-xs bg-muted p-2 rounded font-mono">
-                                    {key.slice(0, 20)}...{key.slice(-12)}
-                                  </code>
-                                </div>
-
-                                {registration.sidechainPubKey && (
-                                  <div className="space-y-1">
-                                    <span className="font-medium text-muted-foreground">Sidechain Pub Key</span>
-                                    <code className="block text-xs bg-muted p-2 rounded font-mono">
-                                      {registration.sidechainPubKey.slice(0, 20)}...
-                                      {registration.sidechainPubKey.slice(-12)}
-                                    </code>
-                                  </div>
-                                )}
-
-                                {registration.epochNumber && (
-                                  <div className="space-y-1">
-                                    <span className="font-medium text-muted-foreground">Epoch Number</span>
-                                    <Badge variant="secondary">{registration.epochNumber}</Badge>
-                                  </div>
-                                )}
-
-                                {registration.blockNumber && (
-                                  <div className="space-y-1">
-                                    <span className="font-medium text-muted-foreground">Block Number</span>
-                                    <Badge variant="secondary">{registration.blockNumber}</Badge>
-                                  </div>
-                                )}
-
-                                {registration.StakeError && (
-                                  <div className="space-y-1">
-                                    <span className="font-medium text-muted-foreground">Stake Status</span>
-                                    <Badge variant="destructive" className="text-xs">
-                                      {registration.StakeError}
-                                    </Badge>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-
-                        {Object.keys(blockData.parameters.candidateRegistrations).length > 3 && (
-                          <div className="text-center py-2">
+                  (() => {
+                    const totalRegs = Object.keys(blockData.parameters.candidateRegistrations).length;
+                    console.log("[BlockExplorer] Total candidateRegistrations:", totalRegs, blockData.parameters.candidateRegistrations);
+                    return (
+                      <Card className="border-l-4 border-l-emerald-500">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-emerald-500" />
+                            Candidate Registrations
                             <Badge variant="secondary">
-                              +{Object.keys(blockData.parameters.candidateRegistrations).length - 3} more registrations
+                              {totalRegs}
                             </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {Object.entries(blockData.parameters.candidateRegistrations)
+                              .slice(0, 3)
+                              .map(([key, registration]: [string, any], index) => (
+                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <Badge variant="outline" className="font-mono text-xs">
+                                      Registration #{index + 1}
+                                    </Badge>
+                                    <div className="relative flex flex-col items-center">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyHookBlockExplorer.copy(key, index)}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                      {copyHookBlockExplorer.copiedIndex === index && (
+                                        <span className="absolute top-full mt-1 text-xs text-green-600 bg-white px-2 py-1 rounded shadow z-10">
+                                          Copied!
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div className="space-y-1">
+                                      <span className="font-medium text-muted-foreground">Registration Key</span>
+                                      <code className="block text-xs bg-muted p-2 rounded font-mono">
+                                        {key.slice(0, 20)}...{key.slice(-12)}
+                                      </code>
+                                    </div>
+
+                                    {registration.sidechainPubKey && (
+                                      <div className="space-y-1">
+                                        <span className="font-medium text-muted-foreground">Sidechain Pub Key</span>
+                                        <code className="block text-xs bg-muted p-2 rounded font-mono">
+                                          {registration.sidechainPubKey.slice(0, 20)}...
+                                          {registration.sidechainPubKey.slice(-12)}
+                                        </code>
+                                      </div>
+                                    )}
+
+                                    {registration.epochNumber && (
+                                      <div className="space-y-1">
+                                        <span className="font-medium text-muted-foreground">Epoch Number</span>
+                                        <Badge variant="secondary">{registration.epochNumber}</Badge>
+                                      </div>
+                                    )}
+
+                                    {registration.blockNumber && (
+                                      <div className="space-y-1">
+                                        <span className="font-medium text-muted-foreground">Block Number</span>
+                                        <Badge variant="secondary">{registration.blockNumber}</Badge>
+                                      </div>
+                                    )}
+
+                                    {registration.StakeError && (
+                                      <div className="space-y-1">
+                                        <span className="font-medium text-muted-foreground">Stake Status</span>
+                                        <Badge variant="destructive" className="text-xs">
+                                          {registration.StakeError}
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+
+                            {totalRegs > 3 && (
+                              <div className="text-center py-2">
+                                <Badge variant="secondary">
+                                  +{totalRegs - 3} more registrations
+                                </Badge>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()
                 )}
 
                 {/* Raw Data Fallback for Other Parameters */}
