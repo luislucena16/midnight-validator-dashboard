@@ -28,18 +28,25 @@ import { useRPC } from "@/hooks/useRPC"
 
 export function ValidatorMonitor() {
   const { call, isLoading } = useRPC()
-  const [publicKey, setPublicKey] = useState("")
   const [validatorData, setValidatorData] = useState<{
     isRegistered: boolean
     uptime: number
     startTime: Date | null
-    blocksProduced: number
+    blocksProduced: number | string
+    runtime: number
     performance: number
     status: string
     nodeKey: string | null
     sessionKeys: string[]
+    memoryGB: number | null
+    memoryUsedPercent?: number | null
+    cpuUsedPercent?: number | null
+    diskUsedGB?: number | null
+    diskUsedPercent?: number | null
+    connectedPeers: number | null
   } | null>(null)
   const [connectedPeers, setConnectedPeers] = useState<number | null>(null)
+  const [copiedNodeKey, setCopiedNodeKey] = useState(false)
 
   useEffect(() => {
     // Fetch connected peers from system_health
@@ -57,40 +64,64 @@ export function ValidatorMonitor() {
   }, [call])
 
   const searchValidator = async () => {
-    if (!publicKey.trim()) return
-
     try {
-      // Try to get actual node information
-      const [hasKey, nodeRoles, localPeerId] = await Promise.all([
-        call("author_hasKey", [publicKey, "aura"]),
-        call("system_nodeRoles"),
-        call("system_localPeerId"),
+      const [blocksProduced, uptime, status, startTime, runtime, memory, cpu, disk, nodeKey, connectedPeers] = await Promise.all([
+        fetchBlocksProduced(),
+        fetchUptime(),
+        fetchStatus(),
+        fetchStartTime(),
+        fetchRuntime(),
+        fetchMemory(),
+        fetchCpu(),
+        fetchDisk(),
+        fetchNodeKey(),
+        fetchConnectedPeers(),
       ])
-
-      const mockData = {
-        isRegistered: hasKey || true,
-        uptime: 99.8,
-        startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        blocksProduced: 1247,
-        performance: 98.5,
-        status: nodeRoles?.includes("Authority") ? "Authority" : "Full Node",
-        nodeKey: localPeerId || publicKey,
-        sessionKeys: [publicKey || "0x", "0x1234...abcd", "0x5678...efgh"],
-      }
-
-      setValidatorData(mockData)
-    } catch (error) {
-      console.error("Failed to fetch validator data:", error)
-      // Fallback to mock data
+      console.log("[ValidatorMonitor] blocksProduced:", blocksProduced)
+      console.log("[ValidatorMonitor] uptime:", uptime)
+      console.log("[ValidatorMonitor] status:", status)
+      console.log("[ValidatorMonitor] /api/start-time response:", startTime)
+      console.log("[ValidatorMonitor] /api/runtime response:", runtime)
+      console.log("[ValidatorMonitor] /api/memory response:", memory)
+      console.log("[ValidatorMonitor] /api/cpu response:", cpu)
+      console.log("[ValidatorMonitor] /api/disk response:", disk)
+      console.log("[ValidatorMonitor] /api/node-key response:", nodeKey)
+      console.log("[ValidatorMonitor] /api/connected-peers response:", connectedPeers)
       setValidatorData({
         isRegistered: true,
-        uptime: 99.8,
-        startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        blocksProduced: 1247,
-        performance: 98.5,
-        status: "Active",
-        nodeKey: publicKey || "0x",
-        sessionKeys: [publicKey || "0x", "0x1234...abcd"],
+        uptime: typeof uptime === "number" ? uptime : 0,
+        startTime: (startTime && startTime.startTimeISO) ? startTime.startTimeISO : null,
+        blocksProduced: typeof blocksProduced === "number" ? blocksProduced : 0,
+        runtime: (runtime && typeof runtime.runtime === "number") ? runtime.runtime : 0,
+        memoryGB: (memory && typeof memory.memTotalGB === "number") ? memory.memTotalGB : null,
+        memoryUsedPercent: (memory && typeof memory.memUsedPercent === "number") ? memory.memUsedPercent : null,
+        cpuUsedPercent: (cpu && typeof cpu.usedPercent === "number") ? cpu.usedPercent : null,
+        diskUsedGB: (disk && typeof disk.usedGB === "number") ? disk.usedGB : null,
+        diskUsedPercent: (disk && typeof disk.usedPercent === "number") ? disk.usedPercent : null,
+        connectedPeers: (connectedPeers && typeof connectedPeers.peers === "number") ? connectedPeers.peers : null,
+        performance: 0,
+        status: status || "N/A",
+        nodeKey: (nodeKey && typeof nodeKey.nodeKey === "string") ? nodeKey.nodeKey : null,
+        sessionKeys: [],
+      })
+    } catch (error) {
+      console.error("Failed to fetch validator data:", error)
+      setValidatorData({
+        isRegistered: true,
+        uptime: 0,
+        startTime: null,
+        blocksProduced: 0,
+        runtime: 0,
+        memoryGB: null,
+        memoryUsedPercent: null,
+        cpuUsedPercent: null,
+        diskUsedGB: null,
+        diskUsedPercent: null,
+        connectedPeers: null,
+        performance: 0,
+        status: "N/A",
+        nodeKey: null,
+        sessionKeys: [],
       })
     }
   }
@@ -101,13 +132,160 @@ export function ValidatorMonitor() {
     return `${days}d ${remainingHours}h`
   }
 
+  const handleCopyNodeKey = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedNodeKey(true)
+      setTimeout(() => setCopiedNodeKey(false), 1500)
+    } catch (err) {
+      setCopiedNodeKey(false)
+      alert("Error while copying Node Key")
+    }
+  }
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
     } catch (err) {
-      console.error("Failed to copy text: ", err)
+      alert("Error while copying")
     }
   }
+
+  async function fetchBlocksProduced() {
+    try {
+      const res = await fetch("/api/blocks-produced")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/blocks-produced response:", data)
+      if (typeof data.blocksProduced === "number") {
+        return data.blocksProduced
+      }
+      return null
+    } catch (err) {
+      console.error("Error fetching blocks produced:", err)
+      return null
+    }
+  }
+
+  async function fetchUptime() {
+    try {
+      const res = await fetch("/api/uptime")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/uptime response:", data)
+      if (typeof data.uptimePercent === "number") {
+        return data.uptimePercent
+      }
+      return null
+    } catch (err) {
+      console.error("Error fetching uptime:", err)
+      return null
+    }
+  }
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch("/api/status")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/status response:", data)
+      if (typeof data.status === "string") {
+        return data.status
+      }
+      return data
+    } catch (err) {
+      console.error("Error fetching status:", err)
+      return "N/A"
+    }
+  }
+
+  async function fetchStartTime() {
+    try {
+      const res = await fetch("/api/start-time")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/start-time response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching start time:", err)
+      return null
+    }
+  }
+
+  async function fetchRuntime() {
+    try {
+      const res = await fetch("/api/runtime")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/runtime response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching runtime:", err)
+      return null
+    }
+  }
+
+  async function fetchMemory() {
+    try {
+      const res = await fetch("/api/memory")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/memory response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching memory:", err)
+      return null
+    }
+  }
+
+  async function fetchCpu() {
+    try {
+      const res = await fetch("/api/cpu")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/cpu response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching CPU:", err)
+      return null
+    }
+  }
+
+  async function fetchDisk() {
+    try {
+      const res = await fetch("/api/disk")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/disk response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching disk:", err)
+      return null
+    }
+  }
+
+  async function fetchNodeKey() {
+    try {
+      const res = await fetch("/api/node-key")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/node-key response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching node key:", err)
+      return null
+    }
+  }
+
+  async function fetchConnectedPeers() {
+    try {
+      const res = await fetch("/api/connected-peers")
+      const data = await res.json()
+      console.log("[ValidatorMonitor] /api/connected-peers response:", data)
+      return data
+    } catch (err) {
+      console.error("Error fetching connected peers:", err)
+      return null
+    }
+  }
+
+  // Ejecuta la búsqueda automáticamente al montar el componente y cada 30 segundos
+  useEffect(() => {
+    searchValidator();
+    const interval = setInterval(searchValidator, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Card className="border-l-4 border-l-emerald-500">
@@ -125,24 +303,6 @@ export function ValidatorMonitor() {
           </TabsList>
 
           <TabsContent value="monitor" className="space-y-6">
-            {/* Search Input */}
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter your validator public key..."
-                value={publicKey}
-                onChange={(e) => setPublicKey(e.target.value)}
-                className="flex-1 font-mono text-sm"
-              />
-              <Button
-                onClick={searchValidator}
-                disabled={isLoading || !publicKey.trim()}
-                className="flex items-center gap-2"
-              >
-                <Search className="h-4 w-4" />
-                Monitor
-              </Button>
-            </div>
-
             {/* Validator Results */}
             {validatorData && (
               <div className="space-y-6">
@@ -172,7 +332,7 @@ export function ValidatorMonitor() {
                   </div>
 
                   <div className="text-center space-y-2">
-                    <Badge variant={validatorData.status === "Authority" ? "default" : "secondary"}>
+                    <Badge variant={validatorData.status === "Synced" ? "default" : "secondary"}>
                       {validatorData.status}
                     </Badge>
                     <div className="text-sm text-muted-foreground">Status</div>
@@ -203,12 +363,12 @@ export function ValidatorMonitor() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div className="space-y-1">
                           <span className="text-muted-foreground">Start Time</span>
-                          <div className="font-mono text-xs">{validatorData.startTime?.toLocaleString() || "N/A"}</div>
+                          <div className="font-mono text-xs">{validatorData.startTime ? new Date(validatorData.startTime).toLocaleString() : "N/A"}</div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-muted-foreground">Runtime</span>
                           <div className="font-mono text-xs">
-                            {formatUptime(168)} {/* 7 days */}
+                            {typeof validatorData.runtime === "number" ? validatorData.runtime : "N/A"}
                           </div>
                         </div>
                       </div>
@@ -230,9 +390,13 @@ export function ValidatorMonitor() {
                             <Cpu className="h-3 w-3 text-blue-500" />
                             <span className="text-sm">CPU Usage</span>
                           </div>
-                          <span className="text-sm font-medium">45%</span>
+                          <span className="text-sm font-medium">
+                            {validatorData.cpuUsedPercent !== null && validatorData.cpuUsedPercent !== undefined
+                              ? `${validatorData.cpuUsedPercent.toFixed(2)}%`
+                              : "N/A"}
+                          </span>
                         </div>
-                        <Progress value={45} className="h-1" />
+                        <Progress value={validatorData.cpuUsedPercent ?? 0} className="h-1" />
                       </div>
 
                       <div className="space-y-3">
@@ -241,9 +405,13 @@ export function ValidatorMonitor() {
                             <MemoryStick className="h-3 w-3 text-green-500" />
                             <span className="text-sm">Memory</span>
                           </div>
-                          <span className="text-sm font-medium">68%</span>
+                          <span className="text-sm font-medium">
+                            {validatorData.memoryGB !== null && validatorData.memoryUsedPercent !== null && validatorData.memoryUsedPercent !== undefined
+                              ? `${validatorData.memoryGB.toFixed(2)} GB (${validatorData.memoryUsedPercent.toFixed(2)}%)`
+                              : "N/A"}
+                          </span>
                         </div>
-                        <Progress value={68} className="h-1" />
+                        <Progress value={validatorData.memoryUsedPercent ?? 0} className="h-1" />
                       </div>
 
                       <div className="space-y-3">
@@ -252,9 +420,13 @@ export function ValidatorMonitor() {
                             <HardDrive className="h-3 w-3 text-purple-500" />
                             <span className="text-sm">Disk Usage</span>
                           </div>
-                          <span className="text-sm font-medium">32%</span>
+                          <span className="text-sm font-medium">
+                            {validatorData.diskUsedGB !== null && validatorData.diskUsedGB !== undefined && validatorData.diskUsedPercent !== null && validatorData.diskUsedPercent !== undefined
+                              ? `${validatorData.diskUsedGB.toFixed(2)} GB (${validatorData.diskUsedPercent.toFixed(2)}%)`
+                              : "N/A"}
+                          </span>
                         </div>
-                        <Progress value={32} className="h-1" />
+                        <Progress value={validatorData.diskUsedPercent ?? 0} className="h-1" />
                       </div>
                     </CardContent>
                   </Card>
@@ -274,21 +446,28 @@ export function ValidatorMonitor() {
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium">Node Key</div>
                           <code className="text-xs text-muted-foreground font-mono break-all">
-                            {validatorData.nodeKey || publicKey}
+                            {validatorData.nodeKey || "N/A"}
                           </code>
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <Badge variant="outline" className="text-xs">
                             Active
                           </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(validatorData.nodeKey || publicKey)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+                          <div className="relative flex flex-col items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyNodeKey(validatorData.nodeKey || "N/A")}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            {copiedNodeKey && (
+                              <span className="absolute top-full mt-1 text-xs text-green-600 bg-white px-2 py-1 rounded shadow z-10">
+                                Copied!
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -323,7 +502,7 @@ export function ValidatorMonitor() {
                     <div className="flex items-center justify-center mb-2">
                       <Users className="h-5 w-5 text-blue-500" />
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">{connectedPeers !== null ? connectedPeers : "-"}</div>
+                    <div className="text-2xl font-bold text-blue-600">{validatorData.connectedPeers !== null && validatorData.connectedPeers !== undefined ? validatorData.connectedPeers : "-"}</div>
                     <div className="text-sm text-muted-foreground">Connected Peers</div>
                   </Card>
 
@@ -331,8 +510,16 @@ export function ValidatorMonitor() {
                     <div className="flex items-center justify-center mb-2">
                       <Database className="h-5 w-5 text-green-500" />
                     </div>
-                    <div className="text-2xl font-bold text-green-600">Synced</div>
-                    <div className="text-sm text-muted-foreground">Sync Status</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {validatorData.status !== undefined && validatorData.status !== null
+                        ? (
+                          <span className={validatorData.status === "Synced" ? "text-green-600" : "text-orange-600"}>
+                            {validatorData.status}
+                          </span>
+                        )
+                        : "N/A"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Status</div>
                   </Card>
 
                   <Card className="border-0 bg-muted/50 text-center p-4">
@@ -375,14 +562,14 @@ export function ValidatorMonitor() {
                     <div className="bg-black text-green-400 p-3 rounded text-xs font-mono overflow-x-auto">
                       <pre>{`curl -X POST http://127.0.0.1:9944 \\
   -H "Content-Type: application/json" \\
-  -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["${publicKey}", "aura"],"id":1}' | jq .`}</pre>
+  -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["${validatorData?.nodeKey || ""}", "aura"],"id":1}' | jq .`}</pre>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
                         copyToClipboard(
-                          `curl -X POST http://127.0.0.1:9944 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["${publicKey}", "aura"],"id":1}' | jq .`,
+                          `curl -X POST http://127.0.0.1:9944 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"author_hasKey","params":["${validatorData?.nodeKey || ""}", "aura"],"id":1}' | jq .`,
                         )
                       }
                       className="w-full"
