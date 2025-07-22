@@ -57,16 +57,19 @@ export function NodeInfo({ chainInfo, nodeVersion, sidechainAndMainchainStatus, 
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div style={{ marginLeft: '-40px' }}>
+          <div className="space-y-3 md:-translate-x-24">
+            <div className="flex items-center space-x-2">
               <Activity className="h-4 w-4 text-green-500" />
               <span className="font-medium">Version</span>
             </div>
-            <div style={{ marginLeft: '-60px' }}>
-              <Badge variant="outline" className="font-mono">
-                {nodeVersion || "Unknown"}
-              </Badge>
-              <div className="text-sm text-muted-foreground mt-1">Node Version</div>
+            <div className="flex items-center space-x-2">
+              <div className="h-4 w-4" />
+              <div>
+                <Badge variant="outline" className="font-mono">
+                  {nodeVersion || "Unknown"}
+                </Badge>
+                <div className="text-sm text-muted-foreground mt-1">Node Version</div>
+              </div>
             </div>
           </div>
         </div>
