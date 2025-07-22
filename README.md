@@ -211,11 +211,10 @@ You can deploy your dashboard so that it is available at any time, perhaps on a 
 
 ### Contribution Guidelines
 
-This is a template designed to be used as a starting point for new projects. You can:
+This project is designed to be forked and used as a base for improvements or new developments. You can:
 
-1. **Use as Template** - Click "Use this template" to create a new repository
-2. **Fork** the repository for your own project
-3. **Contribute** - Any PR is welcome to improve the template
+1. **Fork** the repository for your own project
+2. **Contribute** - Any PR is welcome to improve the project
 
 If contributing:
 1. **Fork** the repository
@@ -254,7 +253,7 @@ If you have issues or questions:
 
 ---
 
-**⭐ If this template is useful to you, consider giving the repository a star!**
+**⭐ If this project is useful to you, consider giving the repository a star!**
 
 ---
 
