@@ -1,0 +1,57 @@
+services:
+  proof-server:
+    container_name: 'midnight-validator-dashboard-proof-server'
+    image: 'midnightnetwork/proof-server:4.0.0'
+    entrypoint: ['midnight-proof-server', '--network', 'testnet', '--verbose']
+    ports:
+      - "6300:6300"
+    volumes:
+      - ${PWD}/.cache/midnight/zk-params:/.cache/midnight/zk-params
+    environment:
+      RUST_BACKTRACE: "full"
+      RUST_LOG: "trace,actix_web::middleware::logger=trace,actix_web=trace"
+  indexer:
+    container_name: 'midnight-validator-dashboard-indexer'
+    image: 'midnightntwrk/indexer-standalone:2.1.1-rc.1-99b0bce4'
+    platform: linux/amd64
+    ports:
+      - '8088:8088'
+    environment:
+      RUST_LOG: "indexer=info,chain_indexer=info,indexer_api=info,wallet_indexer=info,indexer_common=info,fastrace_opentelemetry=off,info"
+      # Random 32-byte hex-encoded secret used to make the standalone indexer run.
+      # Only needed to satisfy the config schema – not meant for secure use.
+      APP__INFRA__SECRET: "303132333435363738393031323334353637383930313233343536373839303132"
+      APP__INFRA__NODE__URL: "ws://node:9944"
+    depends_on:
+      node:
+        condition: service_started
+  node:
+    image: 'midnightnetwork/midnight-node:0.12.0'
+    platform: linux/amd64
+    container_name: 'midnight-validator-dashboard-node'
+    ports:
+      - "9944:9944"
+      - "9615:9615"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9944/health" ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    environment:
+      CFG_PRESET: "dev"
+    command:
+      - --rpc-port=9944
+      - --rpc-external
+      - --prometheus-external
+      - --prometheus-port=9615
+  node-exporter:
+    image: prom/node-exporter
+    container_name: 'midnight-validator-dashboard-node-exporter'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    volumes:
+      - /:/host:ro             
+    command:
+      - '--path.rootfs=/host'  
