@@ -130,11 +130,12 @@ You can clone the project on your server and run it with your official node. To 
 
 - i) Open ports for node and metrics: `9944`, `9615`, `9100`.
 - ii) Flags for the node service:
-```shell
-- --rpc-port=9944
-- --rpc-external
-- --prometheus-external
-- --prometheus-port=9615
+```yml
+    command:
+      - --rpc-port=9944
+      - --rpc-external
+      - --prometheus-external
+      - --prometheus-port=9615
 ```
 - iii) Add the node-exporter service:
 ```shell
