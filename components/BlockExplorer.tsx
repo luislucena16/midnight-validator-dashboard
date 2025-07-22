@@ -43,25 +43,22 @@ export function BlockExplorer() {
     setBlockData({ hash: null, block: null, parameters: null })
     try {
       const blockNum = Number.parseInt(blockNumber)
-      // 1. Obtener hash del bloque
+      // Get block hash
       const hashRes = await fetch(`/api/block-hash?number=${blockNum}`)
       const hashJson = await hashRes.json()
-      console.log("[BlockExplorer] /api/block-hash response:", hashJson)
       if (!hashRes.ok || !hashJson.hash) {
         console.error("[BlockExplorer] Error obteniendo hash:", hashJson)
         setIsLoading(false)
         return
       }
       const hash = hashJson.hash
-      // 2. Obtener datos del bloque y parámetros Ariadne en paralelo
+      // Get block data and Ariadne parameters in parallel
       const [blockResp, parametersResp] = await Promise.all([
         fetch(`/api/block?hash=${hash}`),
         fetch(`/api/ariadne-parameters?number=${blockNum}`),
       ])
       const blockJson = await blockResp.json()
       const parametersJson = await parametersResp.json()
-      console.log("[BlockExplorer] /api/block response:", blockJson)
-      console.log("[BlockExplorer] /api/ariadne-parameters response:", parametersJson)
       setBlockData({
         hash,
         block: blockJson.block ?? null,
@@ -253,7 +250,6 @@ export function BlockExplorer() {
                 {blockData.parameters.candidateRegistrations && (
                   (() => {
                     const totalRegs = Object.keys(blockData.parameters.candidateRegistrations).length;
-                    console.log("[BlockExplorer] Total candidateRegistrations:", totalRegs, blockData.parameters.candidateRegistrations);
                     return (
                       <Card className="border-l-4 border-l-emerald-500">
                         <CardHeader className="pb-3">

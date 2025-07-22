@@ -4,12 +4,9 @@ export async function GET() {
   try {
     const res = await fetch("http://127.0.0.1:9100/metrics")
     const text = await res.text()
-    console.log("[API /api/memory] Prometheus metrics text:\n", text)
     const lines = text.split('\n');
     const totalLine = lines.find(l => l.trim().startsWith('node_memory_MemTotal_bytes'));
     const availLine = lines.find(l => l.trim().startsWith('node_memory_MemAvailable_bytes'));
-    console.log("[API /api/memory] totalLine:", totalLine);
-    console.log("[API /api/memory] availLine:", availLine);
     let memTotalBytes = null;
     let memAvailBytes = null;
     let memTotalGB = null;

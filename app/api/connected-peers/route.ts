@@ -14,7 +14,6 @@ export async function GET() {
       body
     })
     const data = await res.json()
-    console.log("[API /api/connected-peers] RPC response:", data)
     return NextResponse.json({ peers: data.result?.peers })
   } catch (err) {
     return NextResponse.json({ error: "Failed to fetch connected peers" }, { status: 500 })

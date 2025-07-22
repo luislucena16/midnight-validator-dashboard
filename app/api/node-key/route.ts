@@ -14,7 +14,6 @@ export async function GET() {
       body
     })
     const data = await res.json()
-    console.log("[API /api/node-key] RPC response:", data)
     return NextResponse.json({ nodeKey: data.result })
   } catch (err) {
     return NextResponse.json({ error: "Failed to fetch node key" }, { status: 500 })

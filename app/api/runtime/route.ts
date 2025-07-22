@@ -4,12 +4,9 @@ export async function GET() {
   try {
     const res = await fetch("http://127.0.0.1:9615/metrics")
     const text = await res.text()
-    console.log("[API /api/runtime] Prometheus metrics text:\n", text)
     const lines = text.split('\n');
     const sumLine = lines.find(l => l.trim().startsWith('substrate_block_verification_and_import_time_sum'));
     const countLine = lines.find(l => l.trim().startsWith('substrate_block_verification_and_import_time_count'));
-    console.log("[API /api/runtime] sumLine:", sumLine);
-    console.log("[API /api/runtime] countLine:", countLine);
     let sum = 0;
     let count = 0;
     if (sumLine) {

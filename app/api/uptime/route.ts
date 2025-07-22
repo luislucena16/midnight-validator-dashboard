@@ -4,10 +4,8 @@ export async function GET() {
   try {
     const res = await fetch("http://127.0.0.1:9615/metrics")
     const text = await res.text()
-    console.log("[API /api/uptime] Prometheus metrics text:\n", text)
     // Extracts the value of the start time process
     const match = text.match(/substrate_process_start_time_seconds\{chain="[^"]+"\}\s([0-9.]+)/)
-    console.log("[API /api/uptime] Regex match:", match)
     if (match && match[1]) {
       const startTime = parseFloat(match[1])
       const now = Date.now() / 1000 // seconds unix epoch

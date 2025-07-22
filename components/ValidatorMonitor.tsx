@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -91,16 +90,6 @@ export function ValidatorMonitor() {
         fetchNodeKey(),
         fetchConnectedPeers(),
       ])
-      console.log("[ValidatorMonitor] blocksProduced:", blocksProduced)
-      console.log("[ValidatorMonitor] uptime:", uptime)
-      console.log("[ValidatorMonitor] status:", status)
-      console.log("[ValidatorMonitor] /api/start-time response:", startTime)
-      console.log("[ValidatorMonitor] /api/runtime response:", runtime)
-      console.log("[ValidatorMonitor] /api/memory response:", memory)
-      console.log("[ValidatorMonitor] /api/cpu response:", cpu)
-      console.log("[ValidatorMonitor] /api/disk response:", disk)
-      console.log("[ValidatorMonitor] /api/node-key response:", nodeKey)
-      console.log("[ValidatorMonitor] /api/connected-peers response:", connectedPeers)
       setValidatorData({
         isRegistered: true,
         uptime: typeof uptime === "number" ? uptime : 0,
@@ -158,7 +147,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/blocks-produced")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/blocks-produced response:", data)
       if (typeof data.blocksProduced === "number") {
         return data.blocksProduced
       }
@@ -173,7 +161,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/uptime")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/uptime response:", data)
       if (typeof data.uptimePercent === "number") {
         return data.uptimePercent
       }
@@ -188,7 +175,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/status")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/status response:", data)
       if (typeof data.status === "string") {
         return data.status
       }
@@ -203,7 +189,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/start-time")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/start-time response:", data)
       return data
     } catch (err) {
       console.error("Error fetching start time:", err)
@@ -215,7 +200,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/runtime")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/runtime response:", data)
       return data
     } catch (err) {
       console.error("Error fetching runtime:", err)
@@ -227,7 +211,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/memory")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/memory response:", data)
       return data
     } catch (err) {
       console.error("Error fetching memory:", err)
@@ -239,7 +222,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/cpu")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/cpu response:", data)
       return data
     } catch (err) {
       console.error("Error fetching CPU:", err)
@@ -251,7 +233,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/disk")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/disk response:", data)
       return data
     } catch (err) {
       console.error("Error fetching disk:", err)
@@ -263,7 +244,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/node-key")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/node-key response:", data)
       return data
     } catch (err) {
       console.error("Error fetching node key:", err)
@@ -275,7 +255,6 @@ export function ValidatorMonitor() {
     try {
       const res = await fetch("/api/connected-peers")
       const data = await res.json()
-      console.log("[ValidatorMonitor] /api/connected-peers response:", data)
       return data
     } catch (err) {
       console.error("Error fetching connected peers:", err)
@@ -283,7 +262,7 @@ export function ValidatorMonitor() {
     }
   }
 
-  // Ejecuta la búsqueda automáticamente al montar el componente y cada 30 segundos
+  // Performs the search automatically when mounting the component and every 30 seconds
   useEffect(() => {
     searchValidator();
     const interval = setInterval(searchValidator, 30000);

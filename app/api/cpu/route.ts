@@ -46,7 +46,6 @@ async function getCpuStats() {
 export async function GET() {
   try {
     const stats = await getCpuStats()
-    console.log("[API /api/cpu] CPU stats:", stats)
     return NextResponse.json(stats)
   } catch (err) {
     return NextResponse.json({ error: "Failed to fetch CPU stats" }, { status: 500 })

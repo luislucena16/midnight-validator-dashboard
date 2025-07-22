@@ -15,12 +15,9 @@ export async function GET() {
   try {
     const res = await fetch("http://127.0.0.1:9100/metrics")
     const text = await res.text()
-    console.log("[API /api/disk] Prometheus metrics text:\n", text)
     const lines = text.split('\n');
     const sizeLine = lines.find(l => matchLine(l, 'node_filesystem_size_bytes'));
     const availLine = lines.find(l => matchLine(l, 'node_filesystem_avail_bytes'));
-    console.log("[API /api/disk] sizeLine:", sizeLine);
-    console.log("[API /api/disk] availLine:", availLine);
     let sizeBytes = null;
     let availBytes = null;
     let usedBytes = null;

@@ -38,9 +38,10 @@ export function useNodeData() {
   const fetchNodeData = async () => {
     setIsLoading(true)
 
-    // Helper para extraer valor o null de un resultado de AllSettled
+    // Helper to extract value or null from an AllSettled result
     const pick = <T,>(res: PromiseSettledResult<T>): T | null => (res.status === "fulfilled" ? res.value : null)
 
+    // TODO: change call to fetch to request data
     try {
       const results = await Promise.allSettled([
         call("system_chain"), // 0
@@ -53,7 +54,7 @@ export function useNodeData() {
         call("sidechain_getStatus"), // 7
         call("sidechain_getStatus"), // 8
         call("rpc_methods"), // 9
-        call("system_health"), // 10 <-- new
+        call("system_health"), // 10
       ])
 
       const [
@@ -70,8 +71,8 @@ export function useNodeData() {
         health,
       ] = results.map(pick)
 
-      // Si el encabezado finalizado está disponible tratamos de traerlo;
-      // esta segunda llamada también puede fallar, así que la protegemos.
+      // If the finished header is available, we try to fetch it;
+      // this second call may also fail, so we protect it.
       let finalizedHeader: BlockHeader | null = null
       if (finalizedHeadHash) {
         try {

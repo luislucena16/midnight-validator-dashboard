@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import type { RPCRequest, RPCResponse } from "@/types/rpc"
 
+// Midnight TestNet RPC
 const RPC_URL = "https://rpc.testnet-02.midnight.network"
 
 export function useRPC() {
