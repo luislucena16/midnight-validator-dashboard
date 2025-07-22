@@ -138,17 +138,17 @@ You can clone the project on your server and run it with your official node. To 
       - --prometheus-port=9615
 ```
 - iii) Add the node-exporter service:
-```shell
-node-exporter:
-image: prom/node-exporter
-container_name: 'midnight-validator-dashboard-node-exporter'
-ports:
-- "9100:9100"
-restart: unless-stopped
-volumes:
-- /:/host:ro
-command:
-- '--path.rootfs=/host'
+```yml
+  node-exporter:
+    image: prom/node-exporter
+    container_name: 'midnight-validator-dashboard-node-exporter'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    volumes:
+      - /:/host:ro             
+    command:
+      - '--path.rootfs=/host' 
 ```
 
 ***Note***: Make sure you set your firewall rules and that your ports are properly protected on your server, to allow connections only from the IP address you call.
