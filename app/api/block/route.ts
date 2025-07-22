@@ -14,8 +14,8 @@ export async function GET(req: Request) {
       method: "chain_getBlock",
       params: [hash]
     })
-    // TODO: change remote RPC to this -> http://127.0.0.1:9944
-    const res = await fetch("https://rpc.testnet-02.midnight.network", {
+    // TODO: https://rpc.testnet-02.midnight.network
+    const res = await fetch("http://127.0.0.1:9944", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body
