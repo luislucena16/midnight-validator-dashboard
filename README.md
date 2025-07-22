@@ -101,7 +101,7 @@ cd midnight-validator-dashboard
 npm install
 ```
 
-## Setting up local Infrastructure (TesNet)
+## Setting up local Infrastructure (TestNet)
 
 For initial testing purposes, it is recommended to run a test with TestNet before doing so with the official node.
 
@@ -124,7 +124,7 @@ npm run dev
 
 ***Congrats! You can see everything at `localhost:3000`.***
 
-## Setting up your server Infrastructure (TesNet):
+## Setting up your server Infrastructure (TestNet):
 
 You can clone the project on your server and run it with your official node. To do so, the following configurations should be taken into account:
 
