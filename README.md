@@ -233,8 +233,9 @@ This project is currently in active development. Features are being added regula
 ## Roadmap - New Features
 
 - [ ] Improve the user interface (UI) for better usability and aesthetics  
-- [ ] Add search functionality by different public keys  
+- [ ] Add search functionality by different public keys
 - [ ] Support for different network stages: `mainnet`, etc
+- [ ] Replace `call` with `fetch`functions when request the data
 - [ ] Display and monitor granpa, aura and other keys  
 - [ ] Enhance validator performance metrics 
 - [ ] Add customizable alerting and notifications  
